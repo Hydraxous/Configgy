@@ -7,7 +7,7 @@ namespace Configgy.Configuration.AutoGeneration
     internal class BepinColor : ConfigColor
     {
         private ConfigEntry<Color> entry;
-        public BepinColor(Color defaultValue, ConfigEntry<Color> entry) : base(defaultValue)
+        public BepinColor(ConfigEntry<Color> entry) : base(entry.GetDefault())
         {
             this.entry = entry;
         }

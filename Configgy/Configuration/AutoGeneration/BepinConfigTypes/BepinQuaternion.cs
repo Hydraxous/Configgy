@@ -8,7 +8,7 @@ namespace Configgy.Configuration.AutoGeneration
     internal class BepinQuaternion : ConfigQuaternion
     {
         private ConfigEntry<Quaternion> entry;
-        public BepinQuaternion(Quaternion defaultValue, ConfigEntry<Quaternion> entry, Func<Quaternion, bool> inputValidator = null) : base(defaultValue, inputValidator)
+        public BepinQuaternion(ConfigEntry<Quaternion> entry, Func<Quaternion, bool> inputValidator = null) : base(entry.GetDefault(), inputValidator)
         {
             this.entry = entry;
         }

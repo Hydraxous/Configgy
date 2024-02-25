@@ -6,7 +6,7 @@ namespace Configgy.Configuration.AutoGeneration
     internal class BepinToggle : ConfigToggle
     {
         private ConfigEntry<bool> entry;
-        public BepinToggle(bool defaultValue, ConfigEntry<bool> entry) : base(defaultValue)
+        public BepinToggle(ConfigEntry<bool> entry) : base(entry.GetDefault())
         {
             this.entry = entry;
         }

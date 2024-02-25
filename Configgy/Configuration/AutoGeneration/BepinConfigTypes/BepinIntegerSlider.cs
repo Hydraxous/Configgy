@@ -1,14 +1,11 @@
 ﻿using BepInEx.Configuration;
-using System;
 
 namespace Configgy.Configuration.AutoGeneration
 {
-    //Yes it just removes the serialization. It sucks. It works. I don't care.
-    internal class BepinInputField<T> : ConfigInputField<T>
+    internal class BepinIntegerSlider : IntegerSlider
     {
-        protected ConfigEntry<T> entry;
-
-        public BepinInputField(ConfigEntry<T> entry, Func<T, bool> inputValidator = null, Func<string, (bool, T)> typeConverter = null) : base(entry.GetDefault(), inputValidator, typeConverter)
+        private ConfigEntry<int> entry;
+        public BepinIntegerSlider(ConfigEntry<int> entry, AcceptableValueRange<int> range) : base(entry.GetDefault(), range.MinValue, range.MaxValue)
         {
             this.entry = entry;
         }
@@ -19,12 +16,12 @@ namespace Configgy.Configuration.AutoGeneration
             //Do nothing.
         }
 
-        protected override T GetValueCore()
+        protected override int GetValueCore()
         {
             return entry.Value;
         }
 
-        protected override void SetValueCore(T value)
+        protected override void SetValueCore(int value)
         {
             entry.Value = value;
             OnValueChanged?.Invoke(value);

@@ -10,12 +10,12 @@ namespace Configgy.Configuration.AutoGeneration
         ConfigEntry<KeyboardShortcut> keyboardShortcut;
         ConfigEntry<KeyCode> keyCode;
 
-        public BepinKeybind(ConfigEntry<KeyboardShortcut> entry) : base(((KeyboardShortcut)entry.DefaultValue).MainKey)
+        public BepinKeybind(ConfigEntry<KeyboardShortcut> entry) : base(entry.GetDefault().MainKey)
         {
             this.keyboardShortcut = entry;
         }
 
-        public BepinKeybind(ConfigEntry<KeyCode> entry) : base((KeyCode)entry.DefaultValue)
+        public BepinKeybind(ConfigEntry<KeyCode> entry) : base(entry.GetDefault())
         {
             this.keyCode = entry;
         }

@@ -101,8 +101,6 @@ namespace Configgy
             BuildInternal();
         }
 
-        
-
 
         /// <summary>
         /// Builds your configuration menu and registers it with Configgy.
@@ -272,123 +270,67 @@ namespace Configgy
 
             attribute.SetOwner(this);
 
-            bool basicValidator<T>(T val)
+            IConfigElement configElement = entry switch
             {
-                if (entry.Description == null)
-                    return true;
+                ConfigEntry<bool> e => new BepinToggle(e),
+                ConfigEntry<float> e => BepinPrimitiveElement(e),
+                ConfigEntry<int> e => BepinPrimitiveElement(e),
+                ConfigEntry<string> e => BepinPrimitiveElement(e),
+                ConfigEntry<uint> e => BepinPrimitiveElement(e),
+                ConfigEntry<long> e => BepinPrimitiveElement(e),
+                ConfigEntry<ulong> e => BepinPrimitiveElement(e),
+                ConfigEntry<char> e => BepinPrimitiveElement(e),
+                ConfigEntry<Color> e => new BepinColor(e),
+                ConfigEntry<Vector3> e => new BepinVector3(e),
+                ConfigEntry<Vector2> e => new BepinVector2(e),
+                ConfigEntry<Quaternion> e => new BepinQuaternion(e),
+                ConfigEntry<KeyCode> e => new BepinKeybind(e),
+                ConfigEntry<KeyboardShortcut> e => ShortcutAsKeybind(e),
+                _ => BepinUnsupportedType(entry)
+            };
 
-                if (entry.Description.AcceptableValues == null)
-                    return true;
-
-                return entry.Description.AcceptableValues.IsValid(val);
-            }
-
-            if (entry.SettingType == typeof(bool))
-            {
-                BepinToggle toggleElement = new BepinToggle((bool)entry.DefaultValue, entry as ConfigEntry<bool>);
-                RegisterElementCore(attribute, toggleElement);
+            if (configElement is null)
                 return;
-            }
 
-            if (entry.SettingType == typeof(float))
+            RegisterElementCore(attribute, configElement);
+        }
+
+        private IConfigElement BepinUnsupportedType(ConfigEntryBase entry)
+        {
+            Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
+            return null;
+        }
+
+        private static IConfigElement BepinPrimitiveElement<T>(ConfigEntry<T> entry) where T : IEquatable<T>
+        {
+            return (entry?.Description?.AcceptableValues) switch
             {
-                BepinInputField<float> floatElement = new BepinInputField<float>((float)entry.DefaultValue, entry as ConfigEntry<float>, basicValidator);
-                RegisterElementCore(attribute, floatElement);
-                return;
-            }
+                // acceptable value ranges for single-precision floats and 32-bit signed integers get sliders
+                // TODO: make shit more generic so supporting long/uint/double wouldn't require defining more classes
+                AcceptableValueRange<float> range => new BepinFloatSlider(entry as ConfigEntry<float>, range),
+                AcceptableValueRange<int> range => new BepinIntegerSlider(entry as ConfigEntry<int>, range),
 
-            if (entry.SettingType == typeof(int))
+                // anything with an AcceptableValueList gets a dropdown
+                // (as long as we managed to even call this method, which is a challenge for custom types)
+                AcceptableValueList<T> list => new BepinDropdown<T>(entry, list),
+
+                // fallback: if there's any sort of validator we can work with, use that
+                AcceptableValueBase avb => new BepinInputField<T>(entry, val => avb.IsValid(val)),
+
+                // fallback 2: billion-dollar-mistake boogaloo
+                null => new BepinInputField<T>(entry),
+            };
+        }
+
+        private IConfigElement ShortcutAsKeybind(ConfigEntry<KeyboardShortcut> entry)
+        {
+            if (entry.Value.Modifiers.Any())
             {
-                BepinInputField<int> intElement = new BepinInputField<int>((int)entry.DefaultValue, entry as ConfigEntry<int>, basicValidator);
-                RegisterElementCore(attribute, intElement);
-                return;
+                Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. Configgy does not support multi key keybinds. Removing the modifiers within the config file manually will allow this element to be generated as a single-key keybind.");
+                return null;
             }
 
-            if (entry.SettingType == typeof(string))
-            {
-                BepinInputField<string> stringElement = new BepinInputField<string>((string)entry.DefaultValue, entry as ConfigEntry<string>, basicValidator);
-                RegisterElementCore(attribute, stringElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(uint))
-            {
-                BepinInputField<uint> uintElement = new BepinInputField<uint>((uint)entry.DefaultValue, entry as ConfigEntry<uint>, basicValidator);
-                RegisterElementCore(attribute, uintElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(long))
-            {
-                BepinInputField<long> longElement = new BepinInputField<long>((long)entry.DefaultValue, entry as ConfigEntry<long>, basicValidator);
-                RegisterElementCore(attribute, longElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(ulong))
-            {
-                BepinInputField<ulong> ulongElement = new BepinInputField<ulong>((ulong)entry.DefaultValue, entry as ConfigEntry<ulong>, basicValidator);
-                RegisterElementCore(attribute, ulongElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(char))
-            {
-                BepinInputField<char> charElement = new BepinInputField<char>((char)entry.DefaultValue, entry as ConfigEntry<char>, basicValidator);
-                RegisterElementCore(attribute, charElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(Color))
-            {
-                BepinColor colorElement = new BepinColor((Color)entry.DefaultValue, entry as ConfigEntry<Color>);
-                RegisterElementCore(attribute, colorElement);
-                return;
-            }
-
-            if (entry.SettingType == typeof(Vector3))
-            {
-                BepinVector3 vector3Element = new BepinVector3((Vector3)entry.DefaultValue, entry as ConfigEntry<Vector3>);
-                RegisterElementCore(attribute, vector3Element);
-                return;
-            }
-
-            if (entry.SettingType == typeof(Vector2))
-            {
-                BepinVector2 vector2 = new BepinVector2((Vector2)entry.DefaultValue, entry as ConfigEntry<Vector2>);
-                RegisterElementCore(attribute, vector2);
-                return;
-            }
-
-            if (entry.SettingType == typeof(Quaternion))
-            {
-                BepinQuaternion quaternion = new BepinQuaternion((Quaternion)entry.DefaultValue, entry as ConfigEntry<Quaternion>);
-                RegisterElementCore(attribute, quaternion);
-                return;
-            }
-
-            if (entry.SettingType == typeof(KeyCode))
-            {
-                BepinKeybind keybind = new BepinKeybind(entry as ConfigEntry<KeyCode>);
-                RegisterElementCore(attribute, keybind);
-                return;
-            }
-
-            if (entry.SettingType == typeof(KeyboardShortcut))
-            {
-                ConfigEntry<KeyboardShortcut> bind = entry as ConfigEntry<KeyboardShortcut>;
-                if (bind.Value.Modifiers.Any())
-                {
-                    Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key} because Configgy does not support multi key keybinds. Sowwy TwT");
-                    return;
-                }
-
-                BepinKeybind keybind = new BepinKeybind(bind);
-                RegisterElementCore(attribute, keybind);
-                return;
-            }
-
-            Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key} because its type ({entry.SettingType.Name}) is not supported.");
+            return new BepinKeybind(entry);
         }
 
         private void RegisterPrimitive(ConfiggableAttribute descriptor, FieldInfo field)
@@ -396,7 +338,6 @@ namespace Configgy
             if (field.FieldType == typeof(float))
             {
                 RangeAttribute range = field.GetCustomAttribute<RangeAttribute>();
-
                 ConfigValueElement<float> floatElement = null;
 
                 if (range == null)
@@ -507,6 +448,7 @@ namespace Configgy
                 ConfigToggle toggleElement = new ConfigToggle(baseValue);
                 toggleElement.OnValueChanged += (v) => field.SetValue(null, v);
                 RegisterElementCore(descriptor, toggleElement);
+                return;
             }
 
             if (field.FieldType == typeof(string))

@@ -39,6 +39,9 @@ namespace Configgy
         public void SetText(string label)
         {
             this.labelText = label;
+
+            if (this.label)
+                this.label.text = label;
         }
 
         void IConfigElement.BindConfig(ConfigBuilder configBuilder)

@@ -8,7 +8,7 @@ namespace Configgy.Configuration.AutoGeneration
     internal class BepinVector2 : ConfigVector2
     {
         private ConfigEntry<Vector2> entry;
-        public BepinVector2(Vector2 defaultValue, ConfigEntry<Vector2> entry, Func<Vector2, bool> inputValidator = null) : base(defaultValue, inputValidator)
+        public BepinVector2(ConfigEntry<Vector2> entry, Func<Vector2, bool> inputValidator = null) : base(entry.GetDefault(), inputValidator)
         {
             this.entry = entry;
         }
