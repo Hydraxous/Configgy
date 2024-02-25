@@ -12,11 +12,13 @@ namespace Configgy.Patches
     {
         public static RectTransform CanvasRect { get; private set; }
 
+        private static ConfigurationMenu instancedMenu;
+
         [HarmonyPatch("Awake"), HarmonyPostfix]
         public static void OnStart(CanvasController __instance)
         {
             CanvasRect = __instance.GetComponent<RectTransform>();
-            GameObject.Instantiate(PluginAssets.ConfigurationMenu, CanvasRect);
+            instancedMenu = GameObject.Instantiate(PluginAssets.ConfigurationMenu, CanvasRect).GetComponentInChildren<ConfigurationMenu>(true);
             InstanceOpenConfigButtonPauseMenu(CanvasRect);
             InstanceOpenConfigButtonMainMenu(CanvasRect);
             InstanceModalDialogueManager(CanvasRect);

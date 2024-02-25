@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using Configgy.Configuration.AutoGeneration;
+using Configgy.Configuration.AutoGeneration.BepinConfigTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -286,7 +287,7 @@ namespace Configgy
                 ConfigEntry<Quaternion> e => new BepinQuaternion(e),
                 ConfigEntry<KeyCode> e => new BepinKeybind(e),
                 ConfigEntry<KeyboardShortcut> e => ShortcutAsKeybind(e),
-                _ => BepinUnsupportedType(entry)
+                _ => ParseBepinUnsupportedType(entry)
             };
 
             if (configElement is null)
@@ -295,10 +296,36 @@ namespace Configgy
             RegisterElementCore(attribute, configElement);
         }
 
-        private IConfigElement BepinUnsupportedType(ConfigEntryBase entry)
+        private IConfigElement ParseBepinUnsupportedType(ConfigEntryBase entry)
         {
+            if (entry.SettingType.IsEnum)
+                return BepinEnumElement(entry);
+
             Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
             return null;
+        }
+
+        private static IConfigElement BepinEnumElement(ConfigEntryBase entry)
+        {
+
+            int[] values = Enum.GetValues(entry.SettingType).Cast<int>().ToArray();
+            string[] names = Enum.GetNames(entry.SettingType);
+            int defaultIndex = 0;
+            int currentValue = 0;
+            int currentIndex = 0;
+
+            try
+            {
+                currentValue = (int)entry.BoxedValue;
+                defaultIndex = Array.IndexOf(values, (int)entry.BoxedValue);
+                currentIndex = Array.IndexOf(values, currentValue);
+            }catch (System.Exception ex)
+            {
+                Debug.LogError("Failed to get default index for bepin enum dropdown");
+                Debug.LogException(ex);
+            }
+
+            return new BepinEnumDropdown(entry, currentValue, currentIndex, values, names, defaultIndex);
         }
 
         private static IConfigElement BepinPrimitiveElement<T>(ConfigEntry<T> entry) where T : IEquatable<T>

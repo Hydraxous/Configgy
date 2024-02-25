@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 namespace Configgy.UI
 {
+    //Shoutout to xzxADIxzx for inspiring this class from the Jaket mod's UI class.
     public static class DynUI
     {
 
@@ -22,7 +23,6 @@ namespace Configgy.UI
 
         public static void ImageButton(RectTransform rect, Action<Button, Image> onInstance)
         {
-
             Action<Button> onSubInstance = new Action<Button>((b) =>
             {
                 Image icon = b.GetComponentsInChildren<Image>().Where(x=>x.name == "Icon").FirstOrDefault();

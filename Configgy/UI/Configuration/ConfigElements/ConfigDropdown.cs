@@ -12,8 +12,8 @@ namespace Configgy
         public string[] Names { get; private set; }
         public T[] Values { get; private set; }
 
-        private int defaultIndex;
-        private int? currentIndex;
+        protected int defaultIndex;
+        protected int? currentIndex;
 
         public ConfigDropdown(T[] values, string[] names = null, int defaultIndex = 0) : base(values[defaultIndex])
         {
@@ -107,7 +107,7 @@ namespace Configgy
             return GetCurrentIndexCore();
         }
 
-        protected int GetCurrentIndexCore()
+        protected virtual int GetCurrentIndexCore()
         {
             if(currentIndex == null)
             {
@@ -153,7 +153,7 @@ namespace Configgy
             SetIndexCore(index);
         }
 
-        protected void SetIndexCore(int index)
+        protected virtual void SetIndexCore(int index)
         {
             currentIndex = index;
             RefreshValue();

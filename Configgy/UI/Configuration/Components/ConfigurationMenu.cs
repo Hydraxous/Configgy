@@ -31,7 +31,7 @@ namespace Configgy.UI
         private static event Action onGlobalClose;
         private bool menuOpen = false;
 
-        private static bool openedOnce;
+        internal static bool openedOnce;
 
         private void Awake()
         {
@@ -74,6 +74,11 @@ namespace Configgy.UI
 
             //No menus are open so unpause.
             Unpause();
+        }
+
+        internal void Rebuild() 
+        {
+            BuildMenus(ConfigurationManager.GetMenus());
         }
 
         private void DestroyPages()
@@ -319,7 +324,6 @@ namespace Configgy.UI
                 menus[i].SetActive(false);
             }
         }
-
 
         public static void Open()
         {

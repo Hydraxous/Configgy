@@ -12,6 +12,7 @@ namespace Configgy.Configuration.AutoGeneration
         public BepinDropdown(ConfigEntry<T> entry, AcceptableValueList<T> values) : base(values.AcceptableValues, GetNames(entry, values), GetDefaultIndex(entry, values))
         {
             this.entry = entry;
+            this.value = entry.Value;
         }
 
         private static string[] GetNames(ConfigEntry<T> entry, AcceptableValueList<T> values)

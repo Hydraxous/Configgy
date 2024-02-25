@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using Configgy.Assets;
 using Configgy.Configuration.AutoGeneration;
 using HarmonyLib;
