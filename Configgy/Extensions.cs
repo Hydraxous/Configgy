@@ -25,5 +25,19 @@ namespace Configgy
         {
             return entry?.Description?.Tags?.OfType<T>()?.FirstOrDefault();
         }
+
+        public static bool IsAcceptableValueList(this AcceptableValueBase domain)
+        {
+            if (domain is null)
+                return false;
+
+            if (!domain.GetType().IsGenericType)
+                return false;
+
+            if (domain.GetType().GetGenericTypeDefinition() != typeof(AcceptableValueList<>))
+                return false;
+
+            return true;
+        }
     }
 }

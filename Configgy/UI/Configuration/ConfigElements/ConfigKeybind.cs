@@ -19,7 +19,7 @@ namespace Configgy
         private ConfigurationPage page;
         public bool IsBeingRebound { get; private set; }
 
-        protected override void BuildElementCore(ConfiggableAttribute descriptor, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             IsBeingRebound = false;
             page = rect.GetComponentInParent<ConfigurationPage>();

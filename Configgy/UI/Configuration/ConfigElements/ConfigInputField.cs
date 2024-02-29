@@ -27,7 +27,7 @@ namespace Configgy
         private ValueTuple<bool, T> ValidateInputSyntax(string inputValue)
         {
             ValueTuple<bool, T> result = new ValueTuple<bool, T>();
-            
+
             result.Item1 = false;
             result.Item2 = default(T);
 
@@ -52,7 +52,7 @@ namespace Configgy
                 return;
 
             ValueTuple<bool, T> conversionResult;
-            
+
             try
             {
                 conversionResult = valueConverter.Invoke(input);
@@ -103,7 +103,7 @@ namespace Configgy
             instancedField.SetTextWithoutNotify(valueString);
         }
 
-        protected override void BuildElementCore(ConfiggableAttribute configgable, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             DynUI.ConfigUI.CreateElementSlot(rect, this, (r) =>
             {

@@ -24,6 +24,17 @@ namespace Configgy
             RefreshElementValue();
         }
 
+        public ConfigDropdown(T[] values, T defaultValue, string[] names = null)
+            : this(values, names, Mathf.Max(0, Array.FindIndex(values, v => defaultValue.Equals(v))))
+        { }
+
+        public static ConfigDropdown<T> ForEnum(T defaultValue)
+        {
+            T[] values = Enum.GetValues(typeof(T)).Cast<T>().ToArray();
+            string[] names = Enum.GetNames(typeof(T));
+            return new ConfigDropdown<T>(values, defaultValue, names);
+        }
+
         private string[] CreateNames(T[] values, string[] providedNames)
         {
             //If the provided names are null, we just use the ToString method of the values.
@@ -159,7 +170,7 @@ namespace Configgy
             RefreshValue();
         }
 
-        protected override void BuildElementCore(ConfiggableAttribute configgable, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             DynUI.ConfigUI.CreateElementSlot(rect, this, (r) =>
             {

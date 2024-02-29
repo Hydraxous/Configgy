@@ -9,7 +9,7 @@ namespace Configgy
     public class ConfiggyPersistent<T> : ConfigValueElement<T> where T : IConfigElement
     {
         public ConfiggyPersistent(T defaultValue) : base(defaultValue) {}
-        protected override void BuildElementCore(ConfiggableAttribute descriptor, RectTransform rect) {}
+        protected override void BuildElementCore(RectTransform rect) {}
         protected override void RefreshElementValueCore() {}
     }
 }

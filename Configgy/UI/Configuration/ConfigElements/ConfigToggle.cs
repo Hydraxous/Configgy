@@ -6,7 +6,7 @@ namespace Configgy
 {
     public class ConfigToggle : ConfigValueElement<bool>
     {
-        public ConfigToggle(bool defaultValue) : base(defaultValue) 
+        public ConfigToggle(bool defaultValue) : base(defaultValue)
         {
             OnValueChanged += (_) => RefreshElementValue();
         }
@@ -42,7 +42,7 @@ namespace Configgy
             SetValue(newValue);
         }
 
-        protected override void BuildElementCore(ConfiggableAttribute descriptor, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             DynUI.ConfigUI.CreateElementSlot(rect, this, (r) =>
             {

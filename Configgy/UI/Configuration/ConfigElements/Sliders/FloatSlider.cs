@@ -7,9 +7,9 @@ namespace Configgy
     {
         public FloatSlider(float defaultValue, float min, float max) : base(defaultValue, min, max) {}
 
-        protected override void BuildElementCore(ConfiggableAttribute configgable, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
-            base.BuildElementCore(configgable, rect);
+            base.BuildElementCore(rect);
             instancedSlider.wholeNumbers = false;
             OnValueChanged += (v) => RefreshElementValue();
             RefreshElementValue();

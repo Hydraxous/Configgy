@@ -21,7 +21,7 @@ namespace Configgy
         private InputField hexInput;
         private Image colorDisplay;
 
-        protected override void BuildElementCore(ConfiggableAttribute descriptor, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             DynUI.ConfigUI.CreateElementSlot(rect, this, (r) =>
             {
@@ -100,7 +100,7 @@ namespace Configgy
 
         private void SetInputField(InputField input)
         {
-            if (input == null) 
+            if (input == null)
                 return;
 
             hexInput = input;

@@ -1,12 +1,14 @@
 ﻿using BepInEx.Configuration;
+
 using Configgy.Configuration.AutoGeneration;
-using Configgy.Configuration.AutoGeneration.BepinConfigTypes;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using UnityEngine;
 
 namespace Configgy
@@ -32,11 +34,11 @@ namespace Configgy
         internal List<IConfigElement> _configElements;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="guid">Your mod GUID ex:"JohnModder.ULTRAKILL.MyMod"</param>
         /// <param name="menuDisplayName">The display name for your config in the configuration menu.</param>
-        public ConfigBuilder(string guid = null, string menuDisplayName = null) 
+        public ConfigBuilder(string guid = null, string menuDisplayName = null)
         {
             this.owner = Assembly.GetCallingAssembly();
             this.GUID = (string.IsNullOrEmpty(guid) ? owner.GetName().Name : guid);
@@ -258,6 +260,8 @@ namespace Configgy
             RegisterElementCore(descriptor, configElement);
         }
 
+        #region Element construction for BepInEx.Configuration support
+
         public void RegisterBepInExConfigEntry(ConfigEntryBase entry)
         {
             BuildInternal();
@@ -271,259 +275,115 @@ namespace Configgy
 
             attribute.SetOwner(this);
 
-            IConfigElement configElement = entry switch
+            // type T = entry.SettingType;
+            // ConfigValueElement<T> element = MakeBepInExElement<T>(entry);
+            var element = typeof(ConfigBuilder)
+                .GetMethod(nameof(MakeBepInExElement), BindingFlags.Static | BindingFlags.NonPublic)
+                .MakeGenericMethod(entry.SettingType)
+                .Invoke(null, [entry])
+                as ConfigValueElement;
+
+            if (element is null)
             {
-                ConfigEntry<bool> e => new BepinToggle(e),
-                ConfigEntry<float> e => BepinPrimitiveElement(e),
-                ConfigEntry<int> e => BepinPrimitiveElement(e),
-                ConfigEntry<string> e => BepinPrimitiveElement(e),
-                ConfigEntry<uint> e => BepinPrimitiveElement(e),
-                ConfigEntry<long> e => BepinPrimitiveElement(e),
-                ConfigEntry<ulong> e => BepinPrimitiveElement(e),
-                ConfigEntry<char> e => BepinPrimitiveElement(e),
-                ConfigEntry<Color> e => new BepinColor(e),
-                ConfigEntry<Vector3> e => new BepinVector3(e),
-                ConfigEntry<Vector2> e => new BepinVector2(e),
-                ConfigEntry<Quaternion> e => new BepinQuaternion(e),
-                ConfigEntry<KeyCode> e => new BepinKeybind(e),
-                ConfigEntry<KeyboardShortcut> e => ShortcutAsKeybind(e),
-                _ => ParseBepinUnsupportedType(entry)
-            };
-
-            if (configElement is null)
-                return;
-
-            RegisterElementCore(attribute, configElement);
-        }
-
-        private IConfigElement ParseBepinUnsupportedType(ConfigEntryBase entry)
-        {
-            if (entry.SettingType.IsEnum)
-                return BepinEnumElement(entry);
-
-            Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
-            return null;
-        }
-
-        private static IConfigElement BepinEnumElement(ConfigEntryBase entry)
-        {
-
-            int[] values = Enum.GetValues(entry.SettingType).Cast<int>().ToArray();
-            string[] names = Enum.GetNames(entry.SettingType);
-            int defaultIndex = 0;
-            int currentValue = 0;
-            int currentIndex = 0;
-
-            try
-            {
-                currentValue = (int)entry.BoxedValue;
-                defaultIndex = Array.IndexOf(values, (int)entry.BoxedValue);
-                currentIndex = Array.IndexOf(values, currentValue);
-            }catch (System.Exception ex)
-            {
-                Debug.LogError("Failed to get default index for bepin enum dropdown");
-                Debug.LogException(ex);
+                Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
+                return; //skip unsupported types
             }
 
-            return new BepinEnumDropdown(entry, currentValue, currentIndex, values, names, defaultIndex);
+            RegisterElementCore(attribute, BepinElement.WrapUntyped(entry, element));
         }
 
-        private static IConfigElement BepinPrimitiveElement<T>(ConfigEntry<T> entry) where T : IEquatable<T>
+        private static ConfigValueElement MakeBepInExElement<T>(ConfigEntry<T> entry)
         {
-            return (entry?.Description?.AcceptableValues) switch
+            AcceptableValueBase domain = entry.Description?.AcceptableValues;
+            if (domain.IsAcceptableValueList())
             {
-                // acceptable value ranges for single-precision floats and 32-bit signed integers get sliders
-                // TODO: make shit more generic so supporting long/uint/double wouldn't require defining more classes
-                AcceptableValueRange<float> range => new BepinFloatSlider(entry as ConfigEntry<float>, range),
-                AcceptableValueRange<int> range => new BepinIntegerSlider(entry as ConfigEntry<int>, range),
-
-                // anything with an AcceptableValueList gets a dropdown
-                // (as long as we managed to even call this method, which is a challenge for custom types)
-                AcceptableValueList<T> list => new BepinDropdown<T>(entry, list),
-
-                // fallback: if there's any sort of validator we can work with, use that
-                AcceptableValueBase avb => new BepinInputField<T>(entry, val => avb.IsValid(val)),
-
-                // fallback 2: billion-dollar-mistake boogaloo
-                null => new BepinInputField<T>(entry),
-            };
-        }
-
-        private IConfigElement ShortcutAsKeybind(ConfigEntry<KeyboardShortcut> entry)
-        {
-            if (entry.Value.Modifiers.Any())
-            {
-                Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. Configgy does not support multi key keybinds. Removing the modifiers within the config file manually will allow this element to be generated as a single-key keybind.");
-                return null;
+                // This was supposed to be just another arm in a switch statement,
+                // but I can't refer to AcceptableValueList<T> unless the constraint is satisfied.
+                // Some types passed to this method won't satisfy that constraint, so we can't add it to this method.
+                //
+                // This could hardly be any more pointlessly convoluted. Thanks, dotnet.
+                var unbound = typeof(ConfigBuilder).GetMethod(nameof(MakeBepInExDropdown), BindingFlags.Static | BindingFlags.NonPublic);
+                var bound = unbound.MakeGenericMethod(typeof(T));
+                return (ConfigDropdown<T>)bound.Invoke(null, [entry]);
             }
-
-            return new BepinKeybind(entry);
+            else if (domain is AcceptableValueRange<int> intRange)
+            {
+                return new IntegerSlider((int)entry.DefaultValue, intRange.MinValue, intRange.MaxValue);
+            }
+            else if (domain is AcceptableValueRange<float> floatRange)
+            {
+                return new FloatSlider((float)entry.DefaultValue, floatRange.MinValue, floatRange.MaxValue);
+            }
+            else
+            {
+                T defaultValue = entry.GetDefault();
+                return ConfigValueElement.Create(defaultValue);
+            }
         }
+
+        private static ConfigDropdown<T> MakeBepInExDropdown<T>(ConfigEntry<T> entry) where T : IEquatable<T>
+        {
+            AcceptableValueList<T> domain = (AcceptableValueList<T>)entry.Description.AcceptableValues;
+            T[] values = domain.AcceptableValues;
+
+            Func<T, string> getName = entry.GetTag<Func<T, string>>() ?? (v => v.ToString());
+            string[] names = values.Select(getName).ToArray();
+
+            T defaultValue = entry.GetDefault();
+            return new ConfigDropdown<T>(values, defaultValue, names);
+        }
+
+        #endregion
+
+        #region Element construction for ConfiggableAttribute support
 
         private void RegisterPrimitive(ConfiggableAttribute descriptor, FieldInfo field)
         {
-            if (field.FieldType == typeof(float))
+            ConfigValueElement element = MakeElementForField(field);
+            if (element != null)
             {
-                RangeAttribute range = field.GetCustomAttribute<RangeAttribute>();
-                ConfigValueElement<float> floatElement = null;
-
-                if (range == null)
-                {
-                    float baseValue = (float)field.GetValue(null);
-                    floatElement = new ConfigInputField<float>(baseValue);
-
-                }
-                else
-                {
-                    float baseValue = (float)field.GetValue(null);
-                    float clampedValue = Mathf.Clamp(baseValue, range.min, range.max);
-                    floatElement = new FloatSlider(clampedValue, range.min, range.max);
-                }
-
-                floatElement.OnValueChanged += (v) => field.SetValue(null, v); //this is cursed as hell lol, dont care
-                RegisterElementCore(descriptor, floatElement);
-                return;
+                element.BindField(field);
+                RegisterElementCore(descriptor, element);
             }
-
-            if (field.FieldType == typeof(int))
-            {
-                RangeAttribute range = field.GetCustomAttribute<RangeAttribute>();
-
-                ConfigValueElement<int> intElement = null;
-
-                int baseValue = (int)field.GetValue(null);
-
-                if (range == null)
-                {
-                    intElement = new ConfigInputField<int>(baseValue);
-                }
-                else
-                {
-                    int clampedValue = Mathf.Clamp(baseValue, (int)range.min, (int)range.max);
-                    intElement = new IntegerSlider(clampedValue, (int)range.min, (int)range.max);
-                }
-
-                intElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, intElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(uint))
-            {
-                ConfigInputField<uint> uintElement = null;
-                uint baseValue = (uint)field.GetValue(null);
-                uintElement = new ConfigInputField<uint>(baseValue);
-
-                uintElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, uintElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(long))
-            {
-                ConfigInputField<long> longElement = null;
-                long baseValue = (long)field.GetValue(null);
-                longElement = new ConfigInputField<long>(baseValue);
-
-                longElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, longElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(Quaternion))
-            {
-                Quaternion val = (Quaternion)field.GetValue(null);
-
-                ConfigQuaternion QuaternionElement = new ConfigQuaternion(val);
-                QuaternionElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, QuaternionElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(Vector3))
-            {
-                Vector3 baseValue = (Vector3)field.GetValue(null);
-                ConfigVector3 Vector3Element = new ConfigVector3(baseValue);
-                Vector3Element.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, Vector3Element);
-                return;
-            }
-
-            if (field.FieldType == typeof(Vector2))
-            {
-                Vector2 baseValue = (Vector2)field.GetValue(null);
-                ConfigVector2 Vector2Element = new ConfigVector2(baseValue);
-                Vector2Element.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, Vector2Element);
-                return;
-            }
-
-            if (field.FieldType == typeof(ulong))
-            {
-                ConfigInputField<ulong> ulongElement = null;
-                ulong baseValue = (ulong)field.GetValue(null);
-                ulongElement = new ConfigInputField<ulong>(baseValue);
-
-                ulongElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, ulongElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(bool))
-            {
-                bool baseValue = (bool)field.GetValue(null);
-                ConfigToggle toggleElement = new ConfigToggle(baseValue);
-                toggleElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, toggleElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(string))
-            {
-                string baseValue = (string)field.GetValue(null);
-                ConfigInputField<string> stringElement = new ConfigInputField<string>(baseValue);
-                stringElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, stringElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(char))
-            {
-                char baseValue = (char)field.GetValue(null);
-                ConfigInputField<char> stringElement = new ConfigInputField<char>(baseValue);
-                stringElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, stringElement);
-                return;
-            }
-
-            if (field.FieldType == typeof(Color))
-            {
-                Color baseValue = (Color)field.GetValue(null);
-                ConfigColor colorElement = new ConfigColor(baseValue);
-                colorElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, colorElement);
-                return;
-            }
-
-            if (field.FieldType.IsEnum)
-            {
-                ConfigDropdown<int> enumElement = null;
-                int baseValue = (int)field.GetValue(null);
-
-                List<int> values = new List<int>();
-                foreach (var value in Enum.GetValues(field.FieldType))
-                {
-                    values.Add(Convert.ToInt32(value));
-                }
-
-                enumElement = new ConfigDropdown<int>(values.ToArray(), Enum.GetNames(field.FieldType), baseValue);
-                enumElement.OnValueChanged += (v) => field.SetValue(null, v);
-                RegisterElementCore(descriptor, enumElement);
-                return;
-            }
-
-            Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it's type ({field.FieldType.Name}) is not supported. Skipping!");
         }
+
+        private ConfigValueElement MakeElementForField(FieldInfo field)
+        {
+            object baseValue = field.GetValue(null);
+
+            if (field.GetCustomAttribute<RangeAttribute>() is RangeAttribute range)
+            {
+                if (baseValue is float f)
+                {
+                    float min = range.min, max = range.max;
+                    float defaultValue = Mathf.Clamp(f, min, max);
+                    return new FloatSlider(defaultValue, min, max);
+                }
+                else if (baseValue is int i)
+                {
+                    int min = (int)range.min, max = (int)range.max;
+                    int defaultValue = Mathf.Clamp(i, min, max);
+                    return new IntegerSlider(defaultValue, min, max);
+                }
+            }
+
+            // type T = baseValue.GetType();
+            // ConfigValueElement<T> element = ConfigValueElement.Create<T>(baseValue);
+            var element = typeof(ConfigValueElement)
+                .GetMethod(nameof(ConfigValueElement.Create))
+                .MakeGenericMethod(baseValue.GetType())
+                .Invoke(null, [baseValue])
+                as ConfigValueElement;
+
+            if (element is null)
+            {
+                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it's type ({field.FieldType.Name}) is not supported. Skipping!");
+            }
+
+            return element;
+        }
+
+        #endregion
 
         List<SerializedConfiggable> _data;
 
@@ -584,7 +444,7 @@ namespace Configgy
 
             //Remove null values.
             loadedData = loadedData.Where(x => x.IsValid()).ToList();
-            
+
             _data = loadedData;
         }
 

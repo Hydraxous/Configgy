@@ -8,7 +8,7 @@ namespace Configgy
     {
         public T Min { get; }
         public T Max { get; }
-        
+
         public ConfigSlider(T defaultValue, T min, T max) : base(defaultValue)
         {
             this.Min = min;
@@ -46,7 +46,7 @@ namespace Configgy
                 outputText.text = ToString();
         }
 
-        protected override void BuildElementCore(ConfiggableAttribute descriptor, RectTransform rect)
+        protected override void BuildElementCore(RectTransform rect)
         {
             DynUI.ConfigUI.CreateElementSlot(rect, this, (r) =>
             {
