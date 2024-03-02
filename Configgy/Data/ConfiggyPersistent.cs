@@ -5,7 +5,7 @@ namespace Configgy
     /// <summary>
     /// Serializes values without a UI element
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">type to serialize</typeparam>
     public class ConfiggyPersistent<T> : ConfigValueElement<T>
     {
         public ConfiggyPersistent(T defaultValue) : base(defaultValue) {}
