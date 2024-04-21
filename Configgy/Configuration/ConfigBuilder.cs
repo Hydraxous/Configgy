@@ -404,7 +404,21 @@ namespace Configgy
             string folderPath = Path.Combine(Paths.DataFolder, owner.GetName().Name);
 
             if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
+            {
+                //move legacy data if it exists out of old Configs folder and into new one.
+                string legacyFolderPath = Path.Combine(Paths.LegacyDataFolder, owner.GetName().Name);
+                if (Directory.Exists(legacyFolderPath))
+                {
+                    Debug.LogWarning($"Found legacy configgy data for {GUID}. Moving to new location.");
+                    Directory.Move(legacyFolderPath, folderPath);
+                    Debug.LogWarning($"Move Complete.");
+                }
+                else
+                {
+                    Directory.CreateDirectory(folderPath);
+                    Debug.LogWarning($"Created configgy directory for {GUID}.");
+                }
+            }
 
             string filePath = Path.Combine(folderPath, GUID+".json");
 
@@ -488,6 +502,7 @@ namespace Configgy
         {
             GameObject saveChecker = new GameObject($"Configgy_Saver ({GUID})");
             BehaviourRelay br = saveChecker.AddComponent<BehaviourRelay>();
+            saveChecker.hideFlags = HideFlags.HideAndDontSave;
             br.StartCoroutine(SaveChecker());
             GameObject.DontDestroyOnLoad(saveChecker);
         }

@@ -25,6 +25,8 @@ namespace Configgy
             harmony = new Harmony(ConstInfo.GUID+".harmony");
             harmony.PatchAll();
 
+            Paths.CheckFolders();
+
             configgyConfig = new ConfigBuilder(ConstInfo.GUID, "Configgy");
             configgyConfig.BuildAll();
 
@@ -49,6 +51,15 @@ namespace Configgy
                 return;
 
             BepinAutoGenerator.Generate();
+        }
+
+        //Save data on exit
+        private void OnApplicationQuit()
+        {
+            foreach (var config in ConfigurationManager.GetMenus())
+            {
+                config.SaveData();
+            }
         }
     }
 }

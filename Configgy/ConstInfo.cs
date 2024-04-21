@@ -1,6 +1,6 @@
 ﻿namespace Configgy
 {
-    public static class ConstInfo
+    internal static class ConstInfo
     {
         public const string GUID = "Hydraxous.ULTRAKILL.Configgy";
         public const string NAME = "Configgy";

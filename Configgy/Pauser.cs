@@ -56,6 +56,7 @@ namespace Configgy
             if(watcher == null)
             {
                 watcher = new GameObject("ConfiggyPauserWatcher").AddComponent<BehaviourRelay>();
+                watcher.hideFlags = HideFlags.HideAndDontSave;
                 GameObject.DontDestroyOnLoad(watcher.gameObject);
                 watcher.StartCoroutine(PauseWatcher());
             }

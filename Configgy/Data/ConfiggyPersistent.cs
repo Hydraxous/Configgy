@@ -10,6 +10,14 @@ namespace Configgy
     {
         public ConfiggyPersistent(T defaultValue) : base(defaultValue) {}
         protected override void BuildElementCore(RectTransform rect) {}
-        protected override void RefreshElementValueCore() {}
+        protected override void RefreshElementValueCore() { }
+
+        /// <summary>
+        /// This will force the config to save immediately, instead of waiting for auto-save. Please use sparingly.
+        /// </summary>
+        public void ForceSave()
+        {
+            config.SaveData();
+        }
     }
 }
