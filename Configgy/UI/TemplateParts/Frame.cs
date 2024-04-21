@@ -10,17 +10,23 @@ namespace Configgy.UI.Template
         [SerializeField] private RectTransform rectTransform;
         [SerializeField] private RectTransform content;
 
-        public RectTransform Content => content;
-        public RectTransform RectTransform => rectTransform;
+        public virtual RectTransform Content => content;
+        public virtual RectTransform RectTransform => rectTransform;
 
-        public void SetBorderColor(Color color)
+        public virtual void SetBorderColor(Color color)
         {
             border.color = color;
         }
 
-        public void SetBackgroundColor(Color color) 
+        public virtual void SetBackgroundColor(Color color) 
         {
             background.color = color;
+        }
+
+        public virtual void SetInnerSpacing(Vector2 inset)
+        {
+            content.offsetMin = inset;
+            content.offsetMax = -inset;
         }
     }
 }
