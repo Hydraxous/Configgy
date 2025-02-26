@@ -52,7 +52,7 @@ namespace Configgy
 
             if(page == null)
             {
-                Debug.LogError("Page could not be found?");
+                ConfiggyPlugin.Log.LogError("Page could not be found?");
                 return;
             }
 

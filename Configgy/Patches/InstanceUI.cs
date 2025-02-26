@@ -2,6 +2,7 @@
 using Configgy.UI;
 using HarmonyLib;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -65,23 +66,63 @@ namespace Configgy.Patches
             if (SceneHelper.CurrentScene != "Main Menu")
                 return;
 
-            Transform mainMenu = rect.GetChildren().Where(x => x.name == "Main Menu (1)").FirstOrDefault();
-            RectTransform mainMenuRect = mainMenu.GetComponent<RectTransform>();
+            Transform optionsPage = rect.GetChildren().Where(x => x.name == "OptionsMenu").FirstOrDefault();
+            if (!CheckObject(optionsPage, "Options Page is null."))
+                return;
 
-            RectTransform panel = mainMenu.GetChildren().Where(x => x.name == "Panel").FirstOrDefault().GetComponent<RectTransform>();
-            float buttonHeight = panel.sizeDelta.y;
-            Vector2 panelPos = panel.anchoredPosition;
+            RectTransform optionsMenuRect = optionsPage.GetComponent<RectTransform>();
 
-            DynUI.ImageButton(mainMenuRect, (b, i) =>
+            RectTransform navRail = optionsPage.GetChildren().Where(x => x.name == "Navigation Rail").FirstOrDefault().GetComponent<RectTransform>();
+            if (!CheckObject(navRail, "Navigation Rail is null."))
+                return;
+
+            //Find a button and replicate it.
+            GameObject buttonSourceObj = navRail.GetChildren().Where(x => x.GetComponent<Button>()).Select(x=>x.gameObject).FirstOrDefault();
+            if (!CheckObject(buttonSourceObj, "Navigation Rail Button is null."))
+                return;
+
+            int childIndex = navRail.childCount - 3; //2 offset for "Back" button and empty spacing.
+
+            //Check if saves button is present and change our button index to be just after it.
+            GameObject savesButton = navRail.GetChildren().Where(x => x.name == "Saves").Select(x=>x.gameObject).FirstOrDefault();
+            if (savesButton)
+            {
+                childIndex = savesButton.transform.GetSiblingIndex()+1;
+            }
+
+            GameObject configgyButtonObj = GameObject.Instantiate(buttonSourceObj, navRail);
+            configgyButtonObj.transform.SetSiblingIndex(childIndex);
+            TextMeshProUGUI buttonText = configgyButtonObj.GetComponentInChildren<TextMeshProUGUI>();
+            buttonText.text = ConstInfo.NAME.ToUpper();
+
+            Button configgyButton = configgyButtonObj.GetComponent<Button>();
+            configgyButton.m_OnClick = new Button.ButtonClickedEvent(); //Clear existing events and add ours. Double check this doesnt break anything.
+            configgyButton.m_OnClick.AddListener(ConfigurationMenu.Open);
+        }
+
+        private static bool CheckObject(object o, string error)
+        {
+            if (o == null)
+            {
+                ConfiggyPlugin.Log.LogError(error);
+                return false;
+            }
+
+            return true;
+        }
+
+        //Old, but kept in-case I need to change it back.
+        private static void GenerateConfigurationMenuButton(RectTransform rect, Vector2 size, Vector2 position)
+        {
+            DynUI.ImageButton(rect, (b, i) =>
             {
                 i.sprite = PluginAssets.Icon_Configgy;
 
                 RectTransform buttonRect = b.GetComponent<RectTransform>();
                 buttonRect.SetAnchors(0.5f, 0.5f, 0.5f, 0.5f);
-                buttonRect.sizeDelta = new Vector2(buttonHeight, buttonHeight);
+                buttonRect.sizeDelta = size;
 
-                panelPos.x += (panel.sizeDelta.x / 2f) + (buttonHeight / 2f) + 2f;
-                buttonRect.anchoredPosition = panelPos;
+                buttonRect.anchoredPosition = position;
                 b.onClick.AddListener(ConfigurationMenu.Open);
             });
         }

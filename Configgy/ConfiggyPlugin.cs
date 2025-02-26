@@ -1,7 +1,9 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using Configgy.Assets;
 using Configgy.Configuration.AutoGeneration;
+using Configgy.Logging;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,17 +12,21 @@ namespace Configgy
 {
     [BepInPlugin(ConstInfo.GUID, ConstInfo.NAME, ConstInfo.VERSION)]
     [BepInProcess("ULTRAKILL.exe")]
-    public class Plugin : BaseUnityPlugin
+    public class ConfiggyPlugin : BaseUnityPlugin
     {
         private Harmony harmony;
 
         private ConfigBuilder configgyConfig;
+
+        internal static Configgy.Logging.ILogger Log;
 
         public static bool UsingLatest = true;
         public static string LatestVersion { get; private set; } = ConstInfo.VERSION;
 
         private void Awake()
         {
+            Log = new BepInExLogger(Logger);
+
             PluginAssets.Initialize();
             harmony = new Harmony(ConstInfo.GUID+".harmony");
             harmony.PatchAll();
@@ -36,13 +42,13 @@ namespace Configgy
                 if (!UsingLatest)
                 {
                     LatestVersion = latest;
-                    Debug.LogWarning($"New version of {ConstInfo.NAME} available. Current:({ConstInfo.VERSION}) Latest: ({LatestVersion})");
+                    Log.LogWarning($"New version of {ConstInfo.NAME} available. Current:({ConstInfo.VERSION}) Latest: ({LatestVersion})");
                 }
             });
 
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
 
-            Logger.LogInfo($"Plugin {ConstInfo.NAME} is loaded!");
+            Log.Log($"Plugin {ConstInfo.NAME} is loaded!");
         }
 
         private void SceneManager_sceneLoaded(Scene _, LoadSceneMode __)

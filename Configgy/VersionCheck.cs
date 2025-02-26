@@ -48,7 +48,7 @@ namespace Configgy
                     {
                         usingLatest = true;
                         latestVersionName = runningVersionName;
-                        Debug.LogError($"Error getting version info for {runningVersionName}. {e}");
+                        ConfiggyPlugin.Log.LogError($"Error getting version info for {runningVersionName}. {e}");
                     }
 
                 }

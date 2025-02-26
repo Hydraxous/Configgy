@@ -174,19 +174,19 @@ namespace Configgy
 
             if (method.ReturnType != typeof(void))
             {
-                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it's return type is not void. Skipping!");
+                ConfiggyPlugin.Log.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it's return type is not void. Skipping!");
                 return;
             }
 
             if (method.GetParameters().Length > 0)
             {
-                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it has more than 0 parameters. Skipping!");
+                ConfiggyPlugin.Log.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it has more than 0 parameters. Skipping!");
                 return;
             }
 
             if (!method.IsStatic) //no instance!!
             {
-                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it is not static. Skipping!");
+                ConfiggyPlugin.Log.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register method {method.DeclaringType.Name}.{method.Name}. But it is not static. Skipping!");
                 return;
             }
 
@@ -208,7 +208,7 @@ namespace Configgy
 
             if (!field.IsStatic) //no instance!!
             {
-                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it is not static. Skipping!");
+                ConfiggyPlugin.Log.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it is not static. Skipping!");
                 return;
             }
 
@@ -285,7 +285,7 @@ namespace Configgy
 
             if (element is null)
             {
-                Debug.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
+                ConfiggyPlugin.Log.LogWarning($"Configgy.ConfigBuilder:{GUID}: failed to auto generate BepInEx ConfigEntry {entry.Definition.Section}.{entry.Definition.Key}. It's type ({entry.SettingType.Name}) is not supported.");
                 return; //skip unsupported types
             }
 
@@ -377,7 +377,7 @@ namespace Configgy
 
             if (element is null)
             {
-                Debug.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it's type ({field.FieldType.Name}) is not supported. Skipping!");
+                ConfiggyPlugin.Log.LogError($"Configgy.ConfigBuilder:{GUID}: attempted to register field {field.DeclaringType.Name}.{field.Name}. But it's type ({field.FieldType.Name}) is not supported. Skipping!");
             }
 
             return element;
@@ -409,14 +409,14 @@ namespace Configgy
                 string legacyFolderPath = Path.Combine(Paths.LegacyDataFolder, owner.GetName().Name);
                 if (Directory.Exists(legacyFolderPath))
                 {
-                    Debug.LogWarning($"Found legacy configgy data for {GUID}. Moving to new location.");
+                    ConfiggyPlugin.Log.LogWarning($"Found legacy configgy data for {GUID}. Moving to new location.");
                     Directory.Move(legacyFolderPath, folderPath);
-                    Debug.LogWarning($"Move Complete.");
+                    ConfiggyPlugin.Log.LogWarning($"Move Complete.");
                 }
                 else
                 {
                     Directory.CreateDirectory(folderPath);
-                    Debug.LogWarning($"Created configgy directory for {GUID}.");
+                    ConfiggyPlugin.Log.LogWarning($"Created configgy directory for {GUID}.");
                 }
             }
 
@@ -436,11 +436,11 @@ namespace Configgy
                 {
                     string json = File.ReadAllText(filePath);
                     loadedData = Newtonsoft.Json.JsonConvert.DeserializeObject<List<SerializedConfiggable>>(json);
-                    Debug.Log($"Loaded Config {GUID} with {loadedData.Count} values");
+                    ConfiggyPlugin.Log.Log($"Loaded Config {GUID} with {loadedData.Count} values");
                 }catch (System.Exception ex)
                 {
-                    Debug.LogError("Error Loading Configgy Data!");
-                    Debug.LogException(ex);
+                    ConfiggyPlugin.Log.LogError("Error Loading Configgy Data!");
+                    ConfiggyPlugin.Log.LogException(ex);
 
                     int count = 0;
                     while(File.Exists(filePath+$".backup{((count > 0) ? $" ({count})": "")}"))
@@ -448,7 +448,7 @@ namespace Configgy
                         count++;
                     }
 
-                    Debug.Log("Created configgy file backup.");
+                    ConfiggyPlugin.Log.Log("Created configgy file backup.");
                     File.Copy(filePath, filePath + $".backup{((count > 0) ? $" ({count})" : "")}");
                     File.Delete(filePath);
 
@@ -535,8 +535,8 @@ namespace Configgy
                     }
                     catch (System.Exception ex)
                     {
-                        Debug.LogError("Failed to deserialize value");
-                        Debug.LogException(ex);
+                        ConfiggyPlugin.Log.LogError("Failed to deserialize value");
+                        ConfiggyPlugin.Log.LogException(ex);
                         break;
                     }
                 }

@@ -17,7 +17,7 @@ namespace Configgy
         {
             if (ModalDialogueManager.Instance == null)
             {
-                Debug.LogError("No ModalDialogueManager found in scene.");
+                ConfiggyPlugin.Log.LogError("No ModalDialogueManager found in scene.");
                 return;
             }
 
@@ -51,7 +51,7 @@ namespace Configgy
         {
             if (ModalDialogueManager.Instance == null)
             {
-                Debug.LogError("No ModalDialogueManager found in scene.");
+                ConfiggyPlugin.Log.LogError("No ModalDialogueManager found in scene.");
                 return;
             }
 
@@ -68,7 +68,7 @@ namespace Configgy
         {
             if (ModalDialogueManager.Instance == null)
             {
-                Debug.LogError("No ModalDialogueManager found in scene.");
+                ConfiggyPlugin.Log.LogError("No ModalDialogueManager found in scene.");
                 return;
             }
 
@@ -93,7 +93,7 @@ namespace Configgy
         //{
         //    if(ModalDialogueManager.Instance == null)
         //    {
-        //        Debug.LogError("No ModalDialogueManager found in scene.");
+        //        ConfiggyPlugin.Log.LogError("No ModalDialogueManager found in scene.");
         //        return;
         //    }
 
@@ -112,7 +112,7 @@ namespace Configgy
         //{
         //    if (ModalDialogueManager.Instance == null)
         //    {
-        //        Debug.LogError("No ModalDialogueManager found in scene.");
+        //        ConfiggyPlugin.Log.LogError("No ModalDialogueManager found in scene.");
         //        return;
         //    }
         //}

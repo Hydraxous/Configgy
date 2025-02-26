@@ -82,7 +82,7 @@ namespace Configgy
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogException(ex);
+                    ConfiggyPlugin.Log.LogException(ex);
                 }
             }
 

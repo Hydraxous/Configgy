@@ -40,7 +40,7 @@ namespace Configgy
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                ConfiggyPlugin.Log.LogException(ex);
             }
 
             return result;
@@ -58,21 +58,21 @@ namespace Configgy
                 conversionResult = valueConverter.Invoke(input);
                 if (!conversionResult.Item1)
                 {
-                    Debug.LogError("Syntax for field invalid! Conversion failed!");
+                    ConfiggyPlugin.Log.LogError("Syntax for field invalid! Conversion failed!");
                     RefreshElementValue();
                     return;
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                ConfiggyPlugin.Log.LogException(ex);
                 RefreshElementValue();
                 return;
             }
 
             if(!inputValidator.Invoke(conversionResult.Item2))
             {
-                Debug.LogError("Value validation failure. Rejected.");
+                ConfiggyPlugin.Log.LogError("Value validation failure. Rejected.");
                 RefreshElementValue();
                 return;
             }

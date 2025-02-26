@@ -99,7 +99,7 @@ namespace Configgy.UI
         {
             DestroyPages();
 
-            Debug.Log($"Building Configgy Menus {menus.Length}");
+            ConfiggyPlugin.Log.Log($"Building Configgy Menus {menus.Length}");
 
             NewPage((mainPage) =>
             {
@@ -115,7 +115,7 @@ namespace Configgy.UI
                 IConfigElement[] elements = menu.GetConfigElements();
                 if(elements == null)
                 {
-                    Debug.LogError($"ConfigBuilder: {menu.GUID} has null elements. It cannot be built.");
+                    ConfiggyPlugin.Log.LogError($"ConfigBuilder: {menu.GUID} has null elements. It cannot be built.");
                     continue;
                 }
 
@@ -235,7 +235,7 @@ namespace Configgy.UI
             if (!openedOnce)
             {
                 openedOnce = true;
-                if (!Plugin.UsingLatest && notifyOnUpdateAvailable.Value)
+                if (!ConfiggyPlugin.UsingLatest && notifyOnUpdateAvailable.Value)
                 {
                     ShowUpdatePrompt();
                 }
@@ -273,7 +273,7 @@ namespace Configgy.UI
             if (!openedOnce)
             {
                 openedOnce = true;
-                if (!Plugin.UsingLatest && notifyOnUpdateAvailable.Value)
+                if (!ConfiggyPlugin.UsingLatest && notifyOnUpdateAvailable.Value)
                 {
                     ShowUpdatePrompt();
                 }
@@ -285,7 +285,7 @@ namespace Configgy.UI
             ModalDialogue.ShowDialogue(new ModalDialogueEvent()
             {
                 Title = "Outdated",
-                Message = $"You are using an outdated version of {ConstInfo.NAME}: (<color=red>{ConstInfo.VERSION}</color>). Please update to the latest version from Github or Thunderstore: (<color=green>{Plugin.LatestVersion}</color>)",
+                Message = $"You are using an outdated version of {ConstInfo.NAME}: (<color=red>{ConstInfo.VERSION}</color>). Please update to the latest version from Github or Thunderstore: (<color=green>{ConfiggyPlugin.LatestVersion}</color>)",
                 Options = new DialogueBoxOption[]
                         {
                             new DialogueBoxOption()

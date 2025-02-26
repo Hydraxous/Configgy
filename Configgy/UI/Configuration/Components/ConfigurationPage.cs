@@ -124,7 +124,7 @@ namespace Configgy.UI
             {
                 if(configElement == null)
                 {
-                    Debug.LogError($"Configgy: Null element in page {footer}");
+                    ConfiggyPlugin.Log.LogError($"Configgy: Null element in page {footer}");
                     continue;
                 }
 
@@ -133,7 +133,7 @@ namespace Configgy.UI
                     configElement.BuildElement(contentBody);
                 } catch (System.Exception e)
                 {
-                    Debug.LogException(e);
+                    ConfiggyPlugin.Log.LogException(e);
                 }
             }
         }

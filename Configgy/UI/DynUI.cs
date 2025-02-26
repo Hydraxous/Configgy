@@ -159,14 +159,14 @@ namespace Configgy.UI
                         {
                             RectTransform rt = button.GetComponent<RectTransform>();
                             rt.sizeDelta = new Vector2(55f, 55f);
-                            button.onClick.AddListener(() => { Debug.Log(valueElement.Value); });
+                            button.onClick.AddListener(() => { ConfiggyPlugin.Log.Log(valueElement.Value); });
                         });
 
                         DynUI.ImageButton(operatorsDiv, (button, icon) =>
                         {
                             RectTransform rt = button.GetComponent<RectTransform>();
                             rt.sizeDelta = new Vector2(55f, 55f);
-                            button.onClick.AddListener(() => { Debug.Log(valueElement.DefaultValue); });
+                            button.onClick.AddListener(() => { ConfiggyPlugin.Log.Log(valueElement.DefaultValue); });
                         });
                         */
                         onButtonSlots?.Invoke(operatorsDiv);
